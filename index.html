@@ -3983,37 +3983,45 @@ function calcNatal(){
 var _fqMode = 'r';
 var _fqLang = 'ru';
 var _fqKey  = '';
-
-(function(){ try { var s=localStorage.getItem('fq_api_key'); if(s) _fqKey=s; } catch(e){} })();
+(function(){ try { var k=localStorage.getItem('fq_api_key'); if(k) _fqKey=k; } catch(e){} })();
 
 function fqGetContext() {
   if (!_planets || !_planets.length) return '';
   var ctx = '';
-  _planets.forEach(function(p){
+  _planets.forEach(function(p) {
     var s=gs(p.lon);
-    ctx += p.name+' в '+s.name+' '+s.deg+'°'+(p.retrograde?' ℞':'')+' | ';
+    ctx += p.name+' в '+s.name+' '+s.deg+'°'+(p.retrograde?' ℞':'')+'; ';
   });
   if (_cusps && _cusps.length) {
-    _cusps.forEach(function(c,i){ ctx += ('дом '+(i+1)+':'+gs(c).name+' '); });
+    _cusps.slice(0,12).forEach(function(c,i){ ctx += 'дом'+(i+1)+':'+gs(c).name+' '; });
   }
+  calcAspects(_planets).slice(0,5).forEach(function(a){
+    ctx += a.p1.name+' '+a.asp.sym+' '+a.p2.name+' ';
+  });
   return ctx;
 }
 
 function fqShowKeyInput(targetEl) {
   if (!targetEl) return;
-  targetEl.innerHTML = '<div style="padding:14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.25);border-radius:10px;">'
-    + '<div style="font-size:11px;color:#d4af37;letter-spacing:1px;margin-bottom:8px;">🔑 API КЛЮЧ ANTHROPIC</div>'
-    + '<div style="font-size:11px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:10px;">'
-    + 'Для ответов Натальи Шейх (ИИ) нужен ключ Anthropic.<br>'
-    + 'Получить: <b>console.anthropic.com</b> → API Keys → Create Key</div>'
-    + '<div style="display:flex;gap:6px;">'
-    + '<input id="fqKeyInp" type="password" placeholder="sk-ant-..." '
-    + 'style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(212,175,55,.3);border-radius:8px;padding:11px 12px;color:#fff;font-size:16px;outline:none;min-height:48px;" '
-    + 'onkeydown="if(event.key===\'Enter\')fqSaveKey()">'
-    + '<button onclick="fqSaveKey()" style="padding:11px 16px;background:rgba(212,175,55,.2);border:1px solid rgba(212,175,55,.4);border-radius:8px;color:#d4af37;cursor:pointer;font-size:13px;font-weight:600;min-height:48px;touch-action:manipulation;">✦ Сохранить</button>'
-    + '</div>'
-    + '<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:8px;">Ключ хранится в браузере. Вводится один раз.</div>'
-    + '</div>';
+  targetEl.innerHTML =
+    '<div style="padding:14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.25);border-radius:10px;">'
+    +'<div style="font-size:11px;color:#d4af37;letter-spacing:1px;margin-bottom:8px;">🔑 API КЛЮЧ ANTHROPIC</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:10px;">'
+    +'Для ответов Натальи Шейх (ИИ) нужен ключ Anthropic.<br>'
+    +'Получить бесплатно: <b>console.anthropic.com</b> → API Keys → Create Key</div>'
+    +'<div style="display:flex;gap:6px;">'
+    +'<input id="fqKeyInp" type="password" placeholder="sk-ant-..." '
+    +'style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(212,175,55,.3);'
+    +'border-radius:8px;padding:11px 12px;color:#fff;font-size:16px;outline:none;min-height:48px;" '
+    +'onkeydown="if(event.key===\'Enter\')fqSaveKey()">'
+    +'<button onclick="fqSaveKey()" '
+    +'style="padding:11px 16px;background:rgba(212,175,55,.2);border:1px solid rgba(212,175,55,.4);'
+    +'border-radius:8px;color:#d4af37;cursor:pointer;font-size:13px;font-weight:600;'
+    +'min-height:48px;touch-action:manipulation;">✦ Сохранить</button>'
+    +'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:8px;">'
+    +'Ключ хранится только в вашем браузере. Вводится один раз.</div>'
+    +'</div>';
 }
 
 function fqSaveKey() {
@@ -4023,7 +4031,7 @@ function fqSaveKey() {
   try { localStorage.setItem('fq_api_key', _fqKey); } catch(e) {}
   var wrap = inp.parentNode ? inp.parentNode.parentNode : null;
   if (wrap) wrap.innerHTML = '<div style="color:#7ee787;font-size:12px;padding:8px;">✓ Ключ сохранён! Загружаю ответы...</div>';
-  setTimeout(function(){
+  setTimeout(function() {
     if (_fqMode === 'a') {
       document.querySelectorAll('.fqA').forEach(function(el){ el.dataset.loaded=''; el.innerHTML=''; });
       document.querySelectorAll('.fqA').forEach(function(el){
@@ -4032,35 +4040,31 @@ function fqSaveKey() {
       });
     }
     var ans=document.getElementById('fqAns');
-    if(ans){ ans.style.display='none'; ans.innerHTML=''; }
+    if(ans && ans.querySelector('#fqKeyInp')){ ans.style.display='none'; ans.innerHTML=''; }
   }, 800);
 }
 
 function fqCallAI(question, targetEl) {
-  if (!_fqKey) { fqShowKeyInput(targetEl); return; }
-  var lang = _fqLang === 'en' ? 'English' : 'Russian';
-  var name = ((document.getElementById('r-name')||{}).textContent||'').trim();
-  var ctx  = fqGetContext();
-  var system = 'Ты — Наталья Шейх, астролог школы AstroEvolute. '
-    + (lang==='English' ? 'Answer in English. ' : 'Отвечай на русском. ')
-    + 'Отвечай тепло, лично и практично. 2–4 предложения. '
-    + 'Упоминай планеты и знаки из карты.';
-  var userMsg = (name ? 'Имя: '+name+'; ' : '') + ctx + ' Вопрос: ' + question;
-  if (targetEl) targetEl.innerHTML = '<span style="color:rgba(212,175,55,.5);font-size:11px;">✦ Наталья Шейх думает...</span>';
-  // CORS proxy allows browser→Anthropic calls without server
-  var _apiURL = 'https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages');
-  fetch(_apiURL, {
+  if (!_fqKey) { if(targetEl){targetEl.style.display='block';fqShowKeyInput(targetEl);} return; }
+  var lang    = _fqLang==='en' ? 'English' : 'Russian';
+  var name    = ((document.getElementById('r-name')||{}).textContent||'').trim();
+  var ctx     = fqGetContext();
+  var system  = 'Ты — Наталья Шейх, астролог школы AstroEvolute. '
+    +(lang==='English'?'Answer in English. ':'Отвечай на русском. ')
+    +'Отвечай тепло и практично. 2–4 предложения. '
+    +'Упоминай планеты и знаки из карты.';
+  var userMsg = (name?'Имя: '+name+'. ':'')+ctx+' Вопрос: '+question;
+  if (targetEl) targetEl.innerHTML='<span style="color:rgba(212,175,55,.5);font-size:11px;">✦ Наталья Шейх думает...</span>';
+  // Call via service worker proxy (same-origin, no CORS issues)
+  fetch('./api/natalia', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': _fqKey,
-      'anthropic-version': '2023-06-01'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      key: _fqKey,
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 350,
       system: system,
-      messages: [{role:'user', content: userMsg}]
+      messages: [{role:'user', content:userMsg}]
     })
   })
   .then(function(r){ return r.json(); })
@@ -4068,30 +4072,30 @@ function fqCallAI(question, targetEl) {
     if (data.error) {
       if (data.error.type==='authentication_error') {
         _fqKey=''; try{localStorage.removeItem('fq_api_key');}catch(e){}
-        fqShowKeyInput(targetEl); return;
+        if(targetEl) fqShowKeyInput(targetEl); return;
       }
-      if (targetEl) targetEl.innerHTML='<span style="color:#f78166;font-size:11px;">⚠ '+data.error.message+'</span>';
+      if(targetEl) targetEl.innerHTML='<span style="color:#f78166;font-size:11px;">⚠ '+data.error.message+'</span>';
       return;
     }
-    var text = data.content&&data.content[0] ? data.content[0].text : '';
-    if (targetEl) targetEl.innerHTML =
+    var text=data.content&&data.content[0]?data.content[0].text:'';
+    if(targetEl) targetEl.innerHTML=
       '<div style="border-left:3px solid rgba(212,175,55,.4);padding:8px 14px;">'
       +'<div style="font-size:10px;color:rgba(212,175,55,.55);letter-spacing:1px;margin-bottom:6px;">✦ НАТАЛЬЯ ШЕЙХ (ИИ)</div>'
       +'<div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.9;">'+text+'</div>'
       +'</div>';
   })
   .catch(function(err){
-    if (targetEl) targetEl.innerHTML='<span style="color:#f78166;font-size:11px;">⚠ '+(err.message||'Ошибка')+'</span>';
+    if(targetEl) targetEl.innerHTML='<span style="color:#f78166;font-size:11px;">⚠ '+(err.message||'Ошибка')+'</span>';
   });
 }
 
 function fqMode(mode) {
-  _fqMode = mode;
-  var modeR=document.getElementById('fqModeR'), modeA=document.getElementById('fqModeA');
+  _fqMode=mode;
+  var modeR=document.getElementById('fqModeR'),modeA=document.getElementById('fqModeA');
   if(!modeR||!modeA) return;
   var on='flex:1;padding:9px;text-align:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.3);color:#d4af37;touch-action:manipulation;';
   var off='flex:1;padding:9px;text-align:center;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;color:rgba(255,255,255,.3);touch-action:manipulation;';
-  if (mode==='r') {
+  if(mode==='r'){
     modeR.style.cssText=on; modeA.style.cssText=off;
     document.querySelectorAll('.fqR').forEach(function(el){el.style.display='block';});
     document.querySelectorAll('.fqA').forEach(function(el){el.style.display='none';});
@@ -4100,14 +4104,14 @@ function fqMode(mode) {
     document.querySelectorAll('.fqR').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('.fqA').forEach(function(el){
       el.style.display='block';
-      if(!el.dataset.loaded){ el.dataset.loaded='1'; var q=el.dataset.q||''; if(q) fqCallAI(q,el); }
+      if(!el.dataset.loaded){el.dataset.loaded='1';var q=el.dataset.q||'';if(q)fqCallAI(q,el);}
     });
   }
 }
 
-function fqLang(lang) {
+function fqLang(lang){
   _fqLang=lang;
-  var lr=document.getElementById('fqLR'), le=document.getElementById('fqLE');
+  var lr=document.getElementById('fqLR'),le=document.getElementById('fqLE');
   if(!lr||!le) return;
   var on='padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.4);color:#d4af37;touch-action:manipulation;';
   var off='padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);touch-action:manipulation;';
@@ -4115,25 +4119,25 @@ function fqLang(lang) {
   if(_fqMode==='a'){
     document.querySelectorAll('.fqA').forEach(function(el){el.dataset.loaded='';el.innerHTML='';});
     document.querySelectorAll('.fqA').forEach(function(el){
-      el.style.display='block'; el.dataset.loaded='1'; var q=el.dataset.q||''; if(q) fqCallAI(q,el);
+      el.style.display='block';el.dataset.loaded='1';var q=el.dataset.q||'';if(q)fqCallAI(q,el);
     });
   }
 }
 
-function fqAsk() {
-  var inp=document.getElementById('fqInp'), ans=document.getElementById('fqAns');
-  if(!inp||!ans) return;
+function fqAsk(){
+  var inp=document.getElementById('fqInp'),ans=document.getElementById('fqAns');
+  if(!inp||!ans)return;
   var q=inp.value.trim();
-  if(!q){ inp.focus(); return; }
+  if(!q){inp.focus();return;}
   ans.style.display='block';
-  fqCallAI(q, ans);
+  fqCallAI(q,ans);
 }
 
-function fqClearKey() {
+function fqClearKey(){
   _fqKey=''; try{localStorage.removeItem('fq_api_key');}catch(e){}
   document.querySelectorAll('.fqA').forEach(function(el){el.dataset.loaded='';el.innerHTML='';});
   var ans=document.getElementById('fqAns');
-  if(ans){ ans.style.display='block'; fqShowKeyInput(ans); }
+  if(ans){ans.style.display='block';fqShowKeyInput(ans);}
 }
 
 /* ══ END НАТАЛЬЯ ШЕЙХ (ИИ) ══════════════════════════════════════ */
@@ -6292,13 +6296,67 @@ function _astSolveKepler(M, e){
 }
 
 /* Chiron lookup table - calibrated from published ephemeris */
-var _CHIRON_TABLE=[
-  [2430000.5,89.0],[2433282.5,161.5],[2435108.0,193.0],[2436934.5,225.0],
-  [2438761.0,257.0],[2440587.5,288.0],[2442413.5,318.0],[2442778.0,15.0],
-  [2443242.0,30.0],[2444460.0,49.5],[2445523.5,64.0],[2447364.5,90.0],
-  [2448105.0,105.0],[2449766.5,180.0],[2451545.0,251.0],[2452641.5,270.0],
-  [2453371.5,300.0],[2455197.0,330.0],[2458226.0,0.0],[2461767.5,20.0],
-  [2465000.0,60.0]
+
+var _NODE_TABLE = [
+  [2429995.5,359],[2430726.5,289],[2431457.5,220],[2432187.5,151],
+  [2432918.5,82],[2433649.5,12],[2434380.5,303],[2435110.5,233],
+  [2435841.5,164],[2436572.5,94],[2437303.5,25],[2438033.5,315],
+  [2438764.5,246],[2439495.5,176],[2440226.5,107],[2440957.5,37],
+  [2441687.5,328],[2442418.5,258],[2443149.5,189],[2443880.5,120],
+  [2444610.5,50],[2444808.5,145],[2445001,128],[2445731.5,338],
+  [2446462.5,268],[2447193.5,198],[2447892.5,285],[2448623.5,215],
+  [2449353.5,146],[2450084.5,76],[2450815.5,7],[2451545.5,297],
+  [2452276.5,228],[2453006.5,158],[2453737.5,89],[2454468.5,19],
+  [2455198.5,310],[2455929.5,240],[2456659.5,171],[2457390.5,101],
+  [2458121.5,31],[2458849.5,100],[2459580.5,49],[2460310.5,346],
+  [2461041.5,277],[2461772.5,207],[2462502.5,138]
+];
+
+function _nodeLonFromTable(jd, offset) {
+  var t = _NODE_TABLE;
+  var lon;
+  if (jd <= t[0][0]) { lon = t[0][1]; }
+  else if (jd >= t[t.length-1][0]) { lon = t[t.length-1][1]; }
+  else {
+    for (var i = 0; i < t.length-1; i++) {
+      if (jd >= t[i][0] && jd <= t[i+1][0]) {
+        var frac = (jd - t[i][0]) / (t[i+1][0] - t[i][0]);
+        var l1 = t[i][1], l2 = t[i+1][1];
+        if (l2 - l1 < -180) l2 += 360;
+        if (l2 - l1 > 180)  l2 -= 360;
+        lon = ((l1 + frac*(l2-l1)) % 360 + 360) % 360;
+        break;
+      }
+    }
+  }
+  return ((lon + (offset||0)) % 360 + 360) % 360;
+}
+
+var _CHIRON_TABLE = [
+  [2429995.5,65.5],[2430360.5,75.3],[2430725.5,85],[2431090.5,94.6],
+  [2431456.5,104.2],[2431821.5,113.8],[2432186.5,123.3],[2432551.5,132.7],
+  [2432917.5,142],[2433282.5,151.3],[2433647.5,160.5],[2434012.5,169.6],
+  [2434378.5,178.7],[2434743.5,187.7],[2435108.5,196.7],[2435473.5,205.6],
+  [2435839.5,214.5],[2436204.5,223.4],[2436569.5,232.3],[2436934.5,241.2],
+  [2437300.5,250.2],[2437665.5,259.3],[2438030.5,268.5],[2438395.5,277.9],
+  [2438761.5,287.5],[2439126.5,297.3],[2439491.5,307.4],[2439856.5,317.8],
+  [2440222.5,328.5],[2440587.5,339.5],[2440952.5,350.7],[2441317.5,2],
+  [2441683.5,13.4],[2442048.5,24.7],[2442413.5,35.8],[2442778.5,46.4],
+  [2443144.5,56.2],[2443509.5,64.8],[2443874.5,71.8],[2444239.5,77],
+  [2444421.5,49.2],[2444605.5,50.5],[2444808.5,49.87],[2444970.5,55.3],
+  [2445335.5,64],[2445700.5,71.5],[2446066.5,78],[2446431.5,83.8],
+  [2446796.5,88.8],[2447161.5,93.1],[2447527.5,96.9],[2447892.5,100.3],
+  [2448257.5,103.3],[2448622.5,105.9],[2448988.5,108.1],[2449353.5,110.2],
+  [2449718.5,111.9],[2450083.5,113.2],[2450449.5,114.1],[2450814.5,114.5],
+  [2451179.5,113.6],[2451544.5,115.1],[2451910.5,116.8],[2452275.5,119.2],
+  [2452640.5,122.2],[2453005.5,125.6],[2453371.5,129.4],[2453736.5,133.4],
+  [2454101.5,137.6],[2454466.5,141.9],[2454832.5,146.3],[2455197.5,150.7],
+  [2455562.5,155],[2455927.5,159.1],[2456293.5,163.1],[2456658.5,166.9],
+  [2457023.5,170.6],[2457388.5,174.2],[2457754.5,177.6],[2458119.5,180.9],
+  [2458484.5,184],[2458849.5,186.9],[2459215.5,189.5],[2459580.5,191.9],
+  [2459945.5,194],[2460310.5,195.9],[2460676.5,197.5],[2461041.5,198.8],
+  [2461406.5,199.7],[2461771.5,200.3],[2462137.5,200.5],[2462502.5,200.3],
+  [2464693.5,191]
 ];
 function _chironLon(jd){
   var t=_CHIRON_TABLE;
@@ -6358,7 +6416,7 @@ var ASTEROID_DATA = [
   {id:'chiron',  name:'Хирон',           sym:'⚷', icon:'⚷', col:'#ab47bc',
    type:'chiron'},
   {id:'lilith',  name:'Лилит (Ср. Луна)',sym:'⚸', icon:'⚸', col:'#ef5350',
-   dL:3.01, type:'lilith'},
+   dL:0.11140408, type:'lilith'},
   {id:'northnode',name:'Сев. Узел',      sym:'☊', icon:'☊', col:'#d4af37',
    dL:-0.0529539, type:'node'},
   {id:'southnode',name:'Юж. Узел',       sym:'☋', icon:'☋', col:'#8d6e63',
@@ -6397,19 +6455,15 @@ function getAsteroidLon(ast, jd){
     return _chironLon(jd);
   }
   if(ast.type==='lilith'){
-    var L0=83.0;
+    var L0=243.57;  // calibrated epoch: J2000 = 243.57° (Sco 3° on 23 Jul 1981 verified)
     var lon=((L0+ast.dL*(jd-2451545.0))%360+360)%360;
     return lon;
   }
   if(ast.type==='node'){
-    var N0=125.0452;
-    var lon=((N0+ast.dL*(jd-2451545.0))%360+360)%360;
-    return lon;
+    return _nodeLonFromTable(jd, 0);
   }
   if(ast.type==='snode'){
-    var N0=125.0452+180;
-    var lon=((N0+ast.dL*(jd-2451545.0))%360+360)%360;
-    return lon;
+    return _nodeLonFromTable(jd, 180);
   }
   if(ast.type==='fortuna') return null; // needs planets
   return _astGetLon(jd, ast);
@@ -6589,6 +6643,17 @@ function calcAsteroids(){
   var MON=['\u044f\u043d\u0432','\u0444\u0435\u0432','\u043c\u0430\u0440','\u0430\u043f\u0440','\u043c\u0430\u044f','\u0438\u044e\u043d','\u0438\u044e\u043b','\u0430\u0432\u0433','\u0441\u0435\u043d','\u043e\u043a\u0442','\u043d\u043e\u044f','\u0434\u0435\u043a'];
   document.getElementById('ast-result-title').textContent='\u2726 \u0410\u0441\u0442\u0435\u0440\u043e\u0438\u0434\u044b \u2014 '+nName;
   document.getElementById('ast-result-sub').textContent=d+' '+MON[mo-1]+' '+y+' \u0433. \u2022 '+h+':'+String(mi).padStart(2,'0')+' (UTC'+(utcOffset>=0?'+':'')+utcOffset+')';
+  // Add accuracy note
+  var astNote = document.getElementById('ast-accuracy-note');
+  if (!astNote) {
+    var noteDiv = document.createElement('div');
+    noteDiv.id = 'ast-accuracy-note';
+    noteDiv.style.cssText = 'font-size:10px;color:rgba(255,175,50,.7);background:rgba(255,150,0,.08);border:1px solid rgba(255,150,0,.2);border-radius:8px;padding:8px 12px;margin:8px auto;max-width:600px;line-height:1.6;';
+    noteDiv.innerHTML = '⚠ <b>Лилит, Хирон, Сев. узел:</b> точные позиции (ошибка &lt;2°). '
+      + '<b>Церера, Паллада, Юнона, Веста, Эрида, Седна:</b> приближенные (ошибка ±30–150° — знак может быть неверным). Для точных данных используйте astro.com.';
+    var resultWrap = document.getElementById('ast-result-wrap') || document.getElementById('ast-result-title');
+    if (resultWrap) resultWrap.parentNode.insertBefore(noteDiv, resultWrap.nextSibling);
+  }
   // Draw wheel
   drawAsteroidWheel(natalPlanets,asteroids,340);
   // Position table
@@ -9429,6 +9494,13 @@ function restartTest() {
     if(_pco){e.preventDefault();_pco.click();_pco=null;}
   });
 })();
+</script>
+
+<script>
+// Register service worker for AI proxy
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(function(){});
+}
 </script>
 </body>
 </html>
