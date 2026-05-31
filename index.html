@@ -4055,12 +4055,17 @@ function fqCallAI(question, targetEl) {
     +'Упоминай планеты и знаки из карты.';
   var userMsg = (name?'Имя: '+name+'. ':'')+ctx+' Вопрос: '+question;
   if (targetEl) targetEl.innerHTML='<span style="color:rgba(212,175,55,.5);font-size:11px;">✦ Наталья Шейх думает...</span>';
-  // Call via service worker proxy (same-origin, no CORS issues)
-  fetch('./api/natalia', {
+
+  // Direct call to Anthropic API — works from HTTPS origins (GitHub Pages)
+  fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': _fqKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
     body: JSON.stringify({
-      key: _fqKey,
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 350,
       system: system,
@@ -4088,6 +4093,7 @@ function fqCallAI(question, targetEl) {
     if(targetEl) targetEl.innerHTML='<span style="color:#f78166;font-size:11px;">⚠ '+(err.message||'Ошибка')+'</span>';
   });
 }
+
 
 function fqMode(mode) {
   _fqMode=mode;
