@@ -106,15 +106,13 @@ body{
 .card::before{
   content:'';position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse 80% 70% at -10% 50%,rgba(255,215,64,.07),transparent 60%);
-  transition:opacity .2s;
 }
-.card.available{border-color:rgba(255,215,64,.22)}
-.card.available::before{background:radial-gradient(ellipse 80% 70% at -10% 50%,rgba(255,215,64,.11),transparent 60%)}
-.card.available:active{transform:scale(.97)}
-.card.available:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(0,0,0,.45);border-color:rgba(255,215,64,.38)}
+.card.paywall{border-color:rgba(255,215,64,.22);cursor:pointer}
+.card.paywall::before{background:radial-gradient(ellipse 80% 70% at -10% 50%,rgba(255,215,64,.11),transparent 60%)}
+.card.paywall:active{transform:scale(.97)}
+.card.paywall:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(0,0,0,.45);border-color:rgba(255,215,64,.38)}
 
-.card.locked{opacity:.5;cursor:default}
-.card.locked:hover{transform:none;box-shadow:none}
+.card.locked{opacity:.42;cursor:default;pointer-events:none}
 
 .card-icon{
   width:52px;height:52px;border-radius:13px;flex-shrink:0;
@@ -146,17 +144,109 @@ body{
   color:var(--gold);font-size:16px;line-height:1;
   transition:transform .2s;
 }
-.card.available:hover .card-arrow{transform:translateX(3px)}
+.card.paywall:hover .card-arrow{transform:translateX(3px)}
 .card.locked .card-arrow{background:rgba(100,130,180,.08);border-color:rgba(100,130,180,.15);color:var(--muted);font-size:13px}
 
-.status-badge{
-  font-size:9.5px;padding:2px 9px;border-radius:9px;white-space:nowrap;
-}
-.badge-available{background:rgba(80,200,120,.13);border:1px solid rgba(80,200,120,.28);color:#6be09a}
+.status-badge{font-size:9.5px;padding:2px 9px;border-radius:9px;white-space:nowrap}
+.badge-open{background:rgba(80,200,120,.13);border:1px solid rgba(80,200,120,.28);color:#6be09a}
+.badge-price{background:rgba(255,215,64,.13);border:1px solid rgba(255,215,64,.3);color:var(--gold);font-weight:600}
 .badge-locked{background:rgba(100,130,180,.1);border:1px solid rgba(100,130,180,.2);color:var(--muted)}
 
+/* ── Channel banner ── */
+.channel-banner{
+  width:100%;
+  background:rgba(8,18,50,.7);
+  border:1px solid rgba(100,160,255,.2);
+  border-radius:16px;
+  padding:14px 18px;
+  display:flex;align-items:center;gap:14px;
+  text-decoration:none;color:inherit;
+  cursor:pointer;
+  transition:border-color .2s,transform .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.channel-banner:hover{border-color:rgba(100,160,255,.4);transform:translateY(-1px)}
+.channel-banner:active{transform:scale(.98)}
+.ch-icon{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(79,195,247,.2),rgba(79,195,247,.05));
+  border:1px solid rgba(79,195,247,.25);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.ch-body{flex:1;min-width:0}
+.ch-label{font-size:9.5px;letter-spacing:2px;color:rgba(79,195,247,.6);text-transform:uppercase;margin-bottom:3px}
+.ch-name{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.ch-sub{font-size:11px;color:var(--muted)}
+.ch-arrow{color:rgba(79,195,247,.6);font-size:18px;flex-shrink:0}
+
+/* ── Paywall Modal ── */
+#pw-modal{
+  display:none;position:fixed;inset:0;z-index:999;
+  background:rgba(1,6,16,.97);
+  backdrop-filter:blur(10px);
+  overflow-y:auto;
+}
+.pw-inner{
+  max-width:440px;margin:0 auto;
+  padding:44px 20px calc(48px + var(--safe-bottom));
+  text-align:center;
+}
+.pw-eyebrow{font-size:9px;letter-spacing:4px;color:rgba(255,215,64,.6);text-transform:uppercase;margin-bottom:16px}
+.pw-symbol{font-size:52px;line-height:1;margin-bottom:16px;display:block;filter:drop-shadow(0 0 24px rgba(255,215,64,.45))}
+.pw-title{font-family:'Cinzel',serif;font-size:clamp(20px,5vw,26px);font-weight:700;color:#fff;margin-bottom:7px;line-height:1.25}
+.pw-sub{font-size:12px;color:var(--gold);letter-spacing:2px;font-family:'Cinzel',serif;margin-bottom:14px}
+.pw-desc{font-size:13.5px;color:rgba(200,220,255,.6);line-height:1.7;margin-bottom:24px}
+
+.pw-includes{
+  background:rgba(8,18,50,.65);
+  border:1px solid rgba(255,215,64,.16);
+  border-radius:16px;padding:16px 18px;
+  margin-bottom:22px;text-align:left;
+}
+.pw-inc-title{font-size:9px;letter-spacing:3px;color:rgba(255,215,64,.5);
+  text-transform:uppercase;text-align:center;margin-bottom:13px}
+.pw-item{
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:12.5px;color:rgba(200,220,255,.8);
+  margin-bottom:8px;line-height:1.4;
+}
+.pw-item:last-child{margin-bottom:0}
+.pw-dot{color:var(--gold);font-size:8px;margin-top:4px;flex-shrink:0}
+
+.pw-price{
+  font-family:'Cinzel',serif;
+  font-size:clamp(48px,11vw,64px);
+  font-weight:700;color:var(--gold);line-height:1;
+  text-shadow:0 0 36px rgba(255,215,64,.35);
+  margin-bottom:5px;
+}
+.pw-price-note{font-size:12px;color:var(--muted);margin-bottom:26px}
+
+.pw-btn{
+  width:100%;
+  background:linear-gradient(135deg,#b8962a,#ffd740,#c9a840);
+  color:#06040a;font-family:'Cinzel',serif;font-size:14px;font-weight:700;
+  letter-spacing:2px;padding:17px 32px;border-radius:50px;border:none;
+  cursor:pointer;
+  box-shadow:0 0 48px rgba(255,215,64,.28);
+  margin-bottom:11px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .25s;
+}
+.pw-btn:active{transform:scale(.97)}
+.pw-btn:hover{box-shadow:0 0 68px rgba(255,215,64,.44);transform:translateY(-2px)}
+.pw-secure{font-size:11px;color:rgba(112,144,184,.55);
+  display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:18px}
+.pw-back{
+  background:none;border:1px solid rgba(112,144,184,.18);
+  color:rgba(112,144,184,.55);font-size:12px;
+  padding:9px 24px;border-radius:50px;cursor:pointer;
+  letter-spacing:1px;width:100%;
+}
+.pw-back:active{opacity:.7}
+
 /* ── Footer ── */
-.footer{text-align:center;font-size:11px;color:var(--muted);opacity:.5;letter-spacing:.5px}
+.footer{text-align:center;font-size:11px;color:var(--muted);opacity:.45;letter-spacing:.5px}
 </style>
 </head>
 <body>
@@ -164,6 +254,38 @@ body{
 <canvas id="stars"></canvas>
 <div class="nebula"></div>
 
+<!-- ══ PAYWALL MODAL ══ -->
+<div id="pw-modal">
+  <div class="pw-inner">
+    <div class="pw-eyebrow">✦ AstroEvolute · Урок 1 ✦</div>
+    <span class="pw-symbol">🌌</span>
+    <h2 class="pw-title">Основы Астрологии</h2>
+    <p class="pw-sub">3 урока · базовый курс · €17</p>
+    <p class="pw-desc">Один платёж €17 открывает все 3 урока базового курса — от основ до практики. Почти полная астрология в одном пакете.</p>
+
+    <div class="pw-includes">
+      <div class="pw-inc-title">все 3 урока за €17</div>
+      <div class="pw-item"><span class="pw-dot">✦</span><div><strong style="color:var(--gold)">Урок 1 — Основы астрологии</strong><br>
+        <span style="font-size:11.5px;color:var(--muted)">Зодиак, 4 элемента, 12 знаков, управляющие планеты, тест</span></div></div>
+      <div class="pw-item"><span class="pw-dot">✦</span><div><strong style="color:var(--gold)">Урок 2 — Натальная карта</strong><br>
+        <span style="font-size:11.5px;color:var(--muted)">Карта рождения, синастрия, транзиты, астероиды, 12 домов, астрокарта</span></div></div>
+      <div class="pw-item"><span class="pw-dot">✦</span><div><strong style="color:var(--gold)">Урок 3 — Аспекты и практика</strong><br>
+        <span style="font-size:11.5px;color:var(--muted)">Аспекты, конфигурации, питание, спорт, друзья, лучшее место для жизни</span></div></div>
+      <div class="pw-item"><span class="pw-dot">✦</span>♾️ Доступ навсегда после одной оплаты</div>
+    </div>
+
+    <div class="pw-price">€17</div>
+    <div class="pw-price-note">единоразовая оплата · 3 урока · доступ навсегда</div>
+
+    <button class="pw-btn" onclick="pwPay()">
+      <span>⭐</span> Получить все 3 урока — €17
+    </button>
+    <div class="pw-secure">🔒 Безопасная оплата через Telegram</div>
+    <button class="pw-back" onclick="pwClose()">← Назад к курсу</button>
+  </div>
+</div>
+
+<!-- ══ MAIN PAGE ══ -->
 <div class="wrap">
 
   <!-- Header -->
@@ -173,12 +295,12 @@ body{
         <circle cx="45" cy="45" r="43" stroke="rgba(255,215,64,0.15)" stroke-width="1"/>
         <circle cx="45" cy="45" r="43" stroke="url(#ringGrad)" stroke-width="1.5"
           stroke-dasharray="35 9 18 9 28 9 12 9" stroke-linecap="round"/>
-        <circle cx="45" cy="2"    r="2.5" fill="rgba(255,215,64,.75)"/>
-        <circle cx="80" cy="23"   r="1.8" fill="rgba(255,215,64,.5)"/>
-        <circle cx="80" cy="67"   r="1.8" fill="rgba(255,215,64,.5)"/>
-        <circle cx="45" cy="88"   r="2.5" fill="rgba(255,215,64,.75)"/>
-        <circle cx="10" cy="67"   r="1.8" fill="rgba(255,215,64,.5)"/>
-        <circle cx="10" cy="23"   r="1.8" fill="rgba(255,215,64,.5)"/>
+        <circle cx="45" cy="2"  r="2.5" fill="rgba(255,215,64,.75)"/>
+        <circle cx="80" cy="23" r="1.8" fill="rgba(255,215,64,.5)"/>
+        <circle cx="80" cy="67" r="1.8" fill="rgba(255,215,64,.5)"/>
+        <circle cx="45" cy="88" r="2.5" fill="rgba(255,215,64,.75)"/>
+        <circle cx="10" cy="67" r="1.8" fill="rgba(255,215,64,.5)"/>
+        <circle cx="10" cy="23" r="1.8" fill="rgba(255,215,64,.5)"/>
         <defs>
           <linearGradient id="ringGrad" x1="0" y1="0" x2="90" y2="90" gradientUnits="userSpaceOnUse">
             <stop offset="0%"   stop-color="#ffd740"/>
@@ -190,22 +312,38 @@ body{
       <div class="logo-inner">✦</div>
     </div>
     <div class="school-badge">✦ AstroEvolute ✦</div>
-    <h1>ШКОЛА <span>АСТРОЛОГИИ</span></h1>
-    <p>Школа практической астрологии Натальи Шейх.<br>Изучайте звёзды шаг за шагом.</p>
+    <h1>БАЗОВЫЙ КУРС <span>АСТРОЛОГИИ</span></h1>
+    <p>Школа практической астрологии Натальи Шейх.<br>3 урока · базовый курс астрологии · <strong style="color:var(--gold)">всего €17</strong></p>
   </div>
 
-  <div class="divider"><span>Программа курса</span></div>
+  <div class="divider"><span>3 урока за €17</span></div>
 
-  <!-- Cards -->
+  <!-- Value banner -->
+  <div style="width:100%;background:linear-gradient(135deg,rgba(255,215,64,.1),rgba(255,215,64,.05));
+    border:1px solid rgba(255,215,64,.3);border-radius:16px;
+    padding:16px 20px;text-align:center;">
+    <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;
+      color:var(--gold);margin-bottom:6px;text-transform:uppercase">✦ Специальное предложение ✦</div>
+    <div style="font-size:14px;color:#fff;line-height:1.6;margin-bottom:6px">
+      Все <strong style="color:var(--gold)">3 урока</strong> — базовый курс астрологии —
+      за единоразовый платёж <strong style="color:var(--gold);font-size:18px">€17</strong>
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);line-height:1.6">
+      Знаки · Натальная карта · Аспекты · Питание · Спорт · Где жить<br>
+      Доступ навсегда после одной оплаты
+    </div>
+  </div>
+
+  <!-- ── CARDS ── -->
   <div class="cards">
 
-    <!-- Lesson 1 -->
-    <a class="card available" href="lesson1/index.html">
+    <!-- LESSON 1 — paywall €17 -->
+    <div class="card paywall" onclick="pwOpen()">
       <div class="card-icon">🌌</div>
       <div class="card-body">
         <div class="card-num">Урок 1</div>
         <div class="card-title">Основы Астрологии</div>
-        <div class="card-desc">Зодиакальный круг, четыре элемента, 12 знаков, планеты и их энергии. Интерактивные карточки и финальный тест.</div>
+        <div class="card-desc">Зодиакальный круг, четыре стихии, все 12 знаков, управляющие планеты и их совместимость. Интерактивные карточки и финальный тест.</div>
         <div class="tags">
           <span class="tag">🌌 Введение</span>
           <span class="tag">🔥 Элементы</span>
@@ -215,44 +353,27 @@ body{
         </div>
       </div>
       <div class="card-right">
-        <span class="status-badge badge-available">✓ Открыт</span>
+        <span class="status-badge badge-price">3 урока · €17</span>
         <div class="card-arrow">›</div>
       </div>
-    </a>
+    </div>
 
-    <!-- Lesson 2 -->
-    <a class="card available" href="lesson2/index.html">
+    <!-- LESSON 2 — locked -->
+    <div class="card locked">
       <div class="card-icon">🗺️</div>
       <div class="card-body">
         <div class="card-num">Урок 2</div>
         <div class="card-title">Натальная карта</div>
-        <div class="card-desc">Персональный расчёт карты, синастрия, транзиты, астероиды, астрокарта мира, 12 домов и полярность знаков.</div>
+        <div class="card-desc">Личный расчёт карты рождения, синастрия пары, транзиты планет, астероиды, 12 домов, полярность знаков и астрокартография — где на планете твои планеты светят сильнее всего.</div>
         <div class="tags">
           <span class="tag">✦ Натальная карта</span>
           <span class="tag">♡ Синастрия</span>
           <span class="tag">☄ Транзиты</span>
+          <span class="tag">✦ Астероиды</span>
+          <span class="tag">🏠 12 домов</span>
+          <span class="tag">⚤ Полярность</span>
           <span class="tag">🌍 Астрокарта</span>
-          <span class="tag">🏠 Дома</span>
           <span class="tag">📝 Тест</span>
-        </div>
-      </div>
-      <div class="card-right">
-        <span class="status-badge badge-available">✓ Открыт</span>
-        <div class="card-arrow">›</div>
-      </div>
-    </a>
-
-    <!-- Lesson 3 — locked -->
-    <div class="card locked">
-      <div class="card-icon">☿</div>
-      <div class="card-body">
-        <div class="card-num">Урок 3</div>
-        <div class="card-title">Аспекты и конфигурации</div>
-        <div class="card-desc">Соединения, оппозиции, трины и квадратуры. Как планеты взаимодействуют в карте.</div>
-        <div class="tags">
-          <span class="tag">Аспекты</span>
-          <span class="tag">Конфигурации</span>
-          <span class="tag">Орбисы</span>
         </div>
       </div>
       <div class="card-right">
@@ -261,17 +382,23 @@ body{
       </div>
     </div>
 
-    <!-- Lesson 4 — locked -->
+    <!-- LESSON 3 — locked -->
     <div class="card locked">
-      <div class="card-icon">♀</div>
+      <div class="card-icon">☿</div>
       <div class="card-body">
-        <div class="card-num">Урок 4</div>
-        <div class="card-title">Прогнозирование</div>
-        <div class="card-desc">Солнечные дуги, профекции и прогрессии. Как читать будущее по звёздам.</div>
+        <div class="card-num">Урок 3</div>
+        <div class="card-title">Аспекты и практика</div>
+        <div class="card-desc">Аспекты и конфигурации планет, орбисы, личное чтение карты — и практические разделы: питание по звёздам, спорт по Марсу, круг друзей и лучшие города для жизни.</div>
         <div class="tags">
-          <span class="tag">Прогрессии</span>
-          <span class="tag">Профекции</span>
-          <span class="tag">Прогнозы</span>
+          <span class="tag">🔭 Аспекты</span>
+          <span class="tag">🔺 Конфигурации</span>
+          <span class="tag">🎯 Орбисы</span>
+          <span class="tag">✨ Чтение карты</span>
+          <span class="tag">🍎 Питание</span>
+          <span class="tag">🏆 Спорт</span>
+          <span class="tag">👥 Друзья</span>
+          <span class="tag">🌍 Лучшее место для жизни</span>
+          <span class="tag">📝 Тест</span>
         </div>
       </div>
       <div class="card-right">
@@ -282,19 +409,33 @@ body{
 
   </div>
 
+  <div class="divider"><span>Сообщество</span></div>
+
+  <!-- Telegram Channel -->
+  <a class="channel-banner" href="https://t.me/+sqJD2UucX-I1YzU0" target="_blank"
+     onclick="openChannel(event)">
+    <div class="ch-icon">✈️</div>
+    <div class="ch-body">
+      <div class="ch-label">Telegram канал</div>
+      <div class="ch-name">AstroEvolute</div>
+      <div class="ch-sub">Новости, уроки и астрология от Натальи Шейх</div>
+    </div>
+    <div class="ch-arrow">›</div>
+  </a>
+
   <div class="footer">Наталья Шейх · AstroEvolute · 2025</div>
 
 </div>
 
 <script>
-// Stars
+// ── Stars ──
 (function(){
   var c=document.getElementById('stars'),ctx=c.getContext('2d');
   function resize(){c.width=innerWidth;c.height=innerHeight}
   resize();window.addEventListener('resize',resize);
   var stars=Array.from({length:180},function(){
-    return{x:Math.random(),y:Math.random(),r:Math.random()*1.3+0.2,
-      o:Math.random()*.55+.1,s:Math.random()*.005+.001,d:Math.random()>.5?1:-1}
+    return{x:Math.random(),y:Math.random(),r:Math.random()*1.3+.2,
+      o:Math.random()*.55+.1,s:Math.random()*.005+.001,d:Math.random()>.5?1:-1};
   });
   (function draw(){
     ctx.clearRect(0,0,c.width,c.height);
@@ -307,13 +448,62 @@ body{
   })();
 })();
 
-// Telegram Mini App
+// ── Telegram Mini App ──
 (function(){
   var tg=window.Telegram&&window.Telegram.WebApp;
   if(!tg)return;
   tg.ready();tg.expand();
   if(tg.disableVerticalSwipes)tg.disableVerticalSwipes();
   if(tg.lockOrientation)tg.lockOrientation();
+})();
+
+// ── Channel link ──
+function openChannel(e){
+  e.preventDefault();
+  var tg=window.Telegram&&window.Telegram.WebApp;
+  if(tg&&tg.openTelegramLink) tg.openTelegramLink('https://t.me/+sqJD2UucX-I1YzU0');
+  else window.open('https://t.me/+sqJD2UucX-I1YzU0','_blank');
+}
+
+// ── Paywall ──
+function pwOpen(){
+  document.getElementById('pw-modal').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function pwClose(){
+  document.getElementById('pw-modal').style.display='none';
+  document.body.style.overflow='';
+}
+function pwPay(){
+  var tg=window.Telegram&&window.Telegram.WebApp;
+  if(tg&&tg.openTelegramLink) tg.openTelegramLink('https://t.me/+sqJD2UucX-I1YzU0');
+  else window.open('https://t.me/+sqJD2UucX-I1YzU0','_blank');
+}
+function pwSuccess(){
+  try{localStorage.setItem('l1_paid','1');}catch(e){}
+  pwClose();
+  window.location.href='lesson1/index.html';
+}
+
+// ── Auto-unlock for returning paid users ──
+(function(){
+  try{
+    // Check Telegram startapp param (bot sends user back after payment)
+    var tg=window.Telegram&&window.Telegram.WebApp;
+    if(tg){
+      var sp=tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
+      if(sp==='l1paid'){pwSuccess();return;}
+    }
+    // Check localStorage (user already paid previously)
+    if(localStorage.getItem('l1_paid')==='1'){
+      var card=document.querySelector('.card.paywall');
+      if(card){
+        card.onclick=function(){window.location.href='lesson1/index.html';};
+        var badge=card.querySelector('.badge-price');
+        if(badge){badge.textContent='✓ Открыт';badge.className='status-badge badge-open';}
+      }
+    }
+  }catch(e){}
 })();
 </script>
 </body>
