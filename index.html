@@ -409,20 +409,6 @@ body{
 
   </div>
 
-  <div class="divider"><span>Сообщество</span></div>
-
-  <!-- Telegram Channel -->
-  <a class="channel-banner" href="https://t.me/+sqJD2UucX-I1YzU0" target="_blank"
-     onclick="openChannel(event)">
-    <div class="ch-icon">✈️</div>
-    <div class="ch-body">
-      <div class="ch-label">Telegram канал</div>
-      <div class="ch-name">AstroEvolute</div>
-      <div class="ch-sub">Новости, уроки и астрология от Натальи Шейх</div>
-    </div>
-    <div class="ch-arrow">›</div>
-  </a>
-
   <div class="footer">Наталья Шейх · AstroEvolute · 2025</div>
 
 </div>
@@ -476,8 +462,8 @@ function pwClose(){
 }
 function pwPay(){
   var tg=window.Telegram&&window.Telegram.WebApp;
-  if(tg&&tg.openTelegramLink) tg.openTelegramLink('https://t.me/+sqJD2UucX-I1YzU0');
-  else window.open('https://t.me/+sqJD2UucX-I1YzU0','_blank');
+  if(tg&&tg.openTelegramLink) tg.openTelegramLink('https://t.me/tribute/app?startapp=sVNl');
+  else window.open('https://t.me/tribute/app?startapp=sVNl','_blank');
 }
 function pwSuccess(){
   try{localStorage.setItem('l1_paid','1');}catch(e){}
