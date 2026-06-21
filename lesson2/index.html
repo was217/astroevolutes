@@ -6384,11 +6384,20 @@ function calcAsteroidPositions(utcDate, natalPlanets){
   return ASTEROID_DATA.map(function(ast){
     var lon;
     if(ast.type==='fortuna'){
-      // Part of Fortune = ASC + Moon - Sun
+      // Part of Fortune — uses the correct day/night (sect) formula:
+      //   Day birth (Sun above horizon):   ASC + Moon - Sun
+      //   Night birth (Sun below horizon): ASC - Moon + Sun
+      // Sun is above the horizon when it sits in houses 7-12, i.e. when
+      // (Sun - ASC) normalized to [0,360) is >= 180.
       var asc=natalPlanets.find(function(p){return p.name==='\u0410\u0441\u0446\u0435\u043d\u0434\u0435\u043d\u0442';});
       var moon=natalPlanets.find(function(p){return p.name==='\u041b\u0443\u043d\u0430';});
       var sun=natalPlanets.find(function(p){return p.name==='\u0421\u043e\u043b\u043d\u0446\u0435';});
-      lon=asc&&moon&&sun ? ((asc.lon+moon.lon-sun.lon)%360+360)%360 : 0;
+      if(asc&&moon&&sun){
+        var sunFromAsc=((sun.lon-asc.lon)%360+360)%360;
+        var isDay=sunFromAsc>=180; // Sun in houses 7-12 = above horizon = day birth
+        lon=isDay ? ((asc.lon+moon.lon-sun.lon)%360+360)%360
+                  : ((asc.lon-moon.lon+sun.lon)%360+360)%360;
+      } else { lon=0; }
     } else {
       lon=getAsteroidLon(ast,jd);
     }
@@ -9085,7 +9094,7 @@ function calcChartPolarity() {
       icon = '🌙'; title = 'Выраженное женское преобладание ('+femCount+'/'+total+')';
       text = 'Значительное преобладание женской полярности говорит о том, что вы склонны к компромиссу и уступчивости, исполнительны и не стремитесь к лидерству ради лидерства. Вы предпочитаете созерцание и наблюдение, охотно передаёте принятие решений другим. Ваша сила — в накоплении и сохранении. Вызов — научиться проявлять инициативу, когда ситуация требует.';
     } else if (mascCount === femCount) {
-      icon = '⚖'; title = 'Равное распределение (5/5 или 6/4)';
+      icon = '⚖'; title = 'Равное распределение (5/5)';
       text = 'Равновесие полярностей даёт вам гибкость — вы способны проявлять как мужскую, так и женскую энергетику в зависимости от ситуации. Однако в ряде случаев это равновесие может выражаться в противоречивости: когда требуется решительность, женские знаки склоняют к промедлению; когда необходимо уступить — мужская энергетика побуждает настоять на своём.';
     } else if (mascCount > femCount) {
       icon = '♂'; title = 'Преобладание мужской полярности ('+mascCount+'/'+total+')';
