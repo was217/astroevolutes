@@ -6379,6 +6379,33 @@ var _T_LILITH=[[2440587.5,122.7648],[2440602.5,124.4348],[2440617.5,126.1039],[2
 function _tblLon(tbl,jd){if(jd<=tbl[0][0])return tbl[0][1];if(jd>=tbl[tbl.length-1][0])return tbl[tbl.length-1][1];var lo=0,hi=tbl.length-1;while(hi-lo>1){var mid=(lo+hi)>>1;if(tbl[mid][0]<=jd)lo=mid;else hi=mid;}var f=(jd-tbl[lo][0])/(tbl[hi][0]-tbl[lo][0]);var l1=tbl[lo][1],l2=tbl[hi][1];if(l2-l1<-180)l2+=360;if(l2-l1>180)l2-=360;return((l1+f*(l2-l1))%360+360)%360;}
 
 function getAsteroidLon(ast,jd){if(ast.id==='ceres')return _tblLon(_T_CERES,jd);if(ast.id==='pallas')return _tblLon(_T_PALLAS,jd);if(ast.id==='juno')return _tblLon(_T_JUNO,jd);if(ast.id==='vesta')return _tblLon(_T_VESTA,jd);if(ast.id==='chiron')return _tblLon(_T_CHIRON,jd);if(ast.id==='northnode')return _tblLon(_T_NODE,jd);if(ast.id==='southnode')return((_tblLon(_T_NODE,jd)+180)%360+360)%360;if(ast.id==='lilith')return _tblLon(_T_LILITH,jd);if(ast.id==='fortuna')return null;return _astGetLon_kepler(jd,ast);}
+/* ── ASTEROID_DATA: the 9 bodies the Asteroids tab renders (reconstructed) ── */
+var ASTEROID_DATA = [
+  {id:'ceres',     name:'Церера',       sym:'⚳', icon:'⚳', col:'#8bc34a', type:'table'},
+  {id:'pallas',    name:'Паллада',      sym:'⚴', icon:'⚴', col:'#4fc3f7', type:'table'},
+  {id:'juno',      name:'Юнона',        sym:'⚵', icon:'⚵', col:'#ba68c8', type:'table'},
+  {id:'vesta',     name:'Веста',        sym:'⚶', icon:'⚶', col:'#ffb74d', type:'table'},
+  {id:'chiron',    name:'Хирон',        sym:'⚷', icon:'⚷', col:'#4db6ac', type:'table'},
+  {id:'lilith',    name:'Лилит',        sym:'⚸', icon:'⚸', col:'#e57373', type:'table'},
+  {id:'northnode', name:'Северный Узел',sym:'☊', icon:'☊', col:'#fff176', type:'table'},
+  {id:'southnode', name:'Южный Узел',   sym:'☋', icon:'☋', col:'#90a4ae', type:'table'},
+  {id:'fortuna',   name:'Точка Фортуны',sym:'⊗', icon:'⊗', col:'#ffd740', type:'fortuna'}
+];
+
+/* ── AST_MEANINGS: descriptive text per body (info.russian) ── */
+var AST_MEANINGS = {
+  ceres:    {russian:'Церера — забота, питание, материнская любовь. Показывает, как вы заботитесь о других и о себе, ваше отношение к телу, еде и безусловной любви.'},
+  pallas:   {russian:'Паллада — мудрость, стратегия, творческий интеллект. Способность видеть закономерности, находить нестандартные решения и защищать справедливость.'},
+  juno:     {russian:'Юнона — партнёрство, преданность, равенство в отношениях. Показывает, что вам нужно в долгосрочном союзе и каким партнёром вы являетесь.'},
+  vesta:    {russian:'Веста — посвящение, внутренний огонь, священное служение. То, чему вы готовы отдать себя полностью, ваша концентрация и духовная преданность.'},
+  chiron:   {russian:'Хирон — раненый целитель. Указывает на глубокую рану, из которой со временем рождается дар помогать и исцелять других.'},
+  lilith:   {russian:'Чёрная Луна Лилит — дикая, неприручённая сила. Ваша теневая сторона, подавленные желания и место, где вы отказываетесь подчиняться.'},
+  northnode:{russian:'Северный Узел — кармический путь развития. Направление роста души в этой жизни, то, к чему стоит стремиться, даже если это пугает.'},
+  southnode:{russian:'Южный Узел — врождённые таланты из прошлого. То, что вы уже умеете, зона комфорта, которую важно не использовать как убежище.'},
+  fortuna:  {russian:'Точка Фортуны — место удачи и естественной радости. Где Солнце, Луна и Асцендент действуют заодно, там приходит ощущение потока и счастья.'}
+};
+
+
 function calcAsteroidPositions(utcDate, natalPlanets){
   var jd=Astronomy.MakeTime(utcDate).ut+2451545.0;
   return ASTEROID_DATA.map(function(ast){
@@ -6822,10 +6849,15 @@ function acgGetObliquity(date){
   return (84381.406-46.836769*T-0.0001831*T*T+0.002004*T*T*T)/3600*Math.PI/180;
 }
 
-function acgEclToEquat(lonDeg,eps){
+function acgEclToEquat(lonDeg,eps,latDeg){
   var l=lonDeg*Math.PI/180;
-  var ra=Math.atan2(Math.sin(l)*Math.cos(eps),Math.cos(l))*180/Math.PI;
-  var dec=Math.asin(Math.sin(l)*Math.sin(eps))*180/Math.PI;
+  var b=(latDeg||0)*Math.PI/180;
+  // Full spherical transform including ecliptic latitude (planets are not exactly on the ecliptic)
+  var x=Math.cos(b)*Math.cos(l);
+  var y=Math.cos(b)*Math.sin(l)*Math.cos(eps)-Math.sin(b)*Math.sin(eps);
+  var z=Math.cos(b)*Math.sin(l)*Math.sin(eps)+Math.sin(b)*Math.cos(eps);
+  var ra=Math.atan2(y,x)*180/Math.PI;
+  var dec=Math.asin(Math.max(-1,Math.min(1,z)))*180/Math.PI;
   return{ra:(ra+360)%360,dec:dec};
 }
 
@@ -6868,14 +6900,15 @@ function calcACGLines(date){
     try{
       var ec=Astronomy.Ecliptic(Astronomy.GeoVector(pl.body,date,true));
       var lon=((ec.elon%360)+360)%360;
-      var eq=acgEclToEquat(lon,eps);
+      var elat=ec.elat||0;
+      var eq=acgEclToEquat(lon,eps,elat);
       // MC line (vertical line)
       var mcLon=acgMClon(eq.ra,gmst);
       // IC line (opposite)
       var icLon=mcLon>0?mcLon-180:mcLon+180;
       // ASC and DSC lines (curved)
       var ascPts=[],dscPts=[];
-      for(var lat=-75;lat<=75;lat+=3){
+      for(var lat=-75;lat<=75;lat+=1){
         var aLon=acgASClon(eq.ra,eq.dec,lat,gmst,true);
         var dLon=acgASClon(eq.ra,eq.dec,lat,gmst,false);
         if(aLon!==null) ascPts.push({lat:lat,lon:aLon});
@@ -7054,10 +7087,14 @@ function acgGetObliquity(date){
   return (84381.406-46.836769*T-0.0001831*T*T+0.002004*T*T*T)/3600*Math.PI/180;
 }
 
-function acgEclToEquat(lonDeg,eps){
+function acgEclToEquat(lonDeg,eps,latDeg){
   var l=lonDeg*Math.PI/180;
-  var ra=Math.atan2(Math.sin(l)*Math.cos(eps),Math.cos(l))*180/Math.PI;
-  var dec=Math.asin(Math.sin(l)*Math.sin(eps))*180/Math.PI;
+  var b=(latDeg||0)*Math.PI/180;
+  var x=Math.cos(b)*Math.cos(l);
+  var y=Math.cos(b)*Math.sin(l)*Math.cos(eps)-Math.sin(b)*Math.sin(eps);
+  var z=Math.cos(b)*Math.sin(l)*Math.sin(eps)+Math.sin(b)*Math.cos(eps);
+  var ra=Math.atan2(y,x)*180/Math.PI;
+  var dec=Math.asin(Math.max(-1,Math.min(1,z)))*180/Math.PI;
   return{ra:(ra+360)%360,dec:dec};
 }
 
@@ -7100,14 +7137,15 @@ function calcACGLines(date){
     try{
       var ec=Astronomy.Ecliptic(Astronomy.GeoVector(pl.body,date,true));
       var lon=((ec.elon%360)+360)%360;
-      var eq=acgEclToEquat(lon,eps);
+      var elat=ec.elat||0;
+      var eq=acgEclToEquat(lon,eps,elat);
       // MC line (vertical line)
       var mcLon=acgMClon(eq.ra,gmst);
       // IC line (opposite)
       var icLon=mcLon>0?mcLon-180:mcLon+180;
       // ASC and DSC lines (curved)
       var ascPts=[],dscPts=[];
-      for(var lat=-75;lat<=75;lat+=3){
+      for(var lat=-75;lat<=75;lat+=1){
         var aLon=acgASClon(eq.ra,eq.dec,lat,gmst,true);
         var dLon=acgASClon(eq.ra,eq.dec,lat,gmst,false);
         if(aLon!==null) ascPts.push({lat:lat,lon:aLon});
