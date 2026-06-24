@@ -4820,6 +4820,7 @@ function selectCity(name,country,lat,lon){
   if(inp)inp.value=name+', '+country;
   document.getElementById('nc-lat').value=lat;
   document.getElementById('nc-lon').value=lon;
+  try{if(window._l2Sync){_l2Sync('nc','lat',String(lat));_l2Sync('nc','lon',String(lon));var _nci=document.getElementById('nc-city-search');if(_nci)_l2Sync('nc','city',_nci.value);}}catch(e){}
   var dd=document.getElementById('nc-city-dropdown');
   if(dd)dd.style.display='none';
   var csel=document.getElementById('nc-country');
@@ -5651,7 +5652,7 @@ document.addEventListener('click',function(e){
   if(opt){
     document.getElementById('tr-city').value=opt.dataset.name+', '+opt.dataset.country;
     document.getElementById('tr-lat').value=opt.dataset.lat;
-    document.getElementById('tr-lon').value=opt.dataset.lon;
+    document.getElementById('tr-lon').value=opt.dataset.lon; try{if(window._l2Sync){_l2Sync('tr','city',opt.dataset.name+', '+opt.dataset.country);_l2Sync('tr','lat',opt.dataset.lat);_l2Sync('tr','lon',opt.dataset.lon);}}catch(e){}
     document.getElementById('tr-city-dd').style.display='none';
     var dv=(document.getElementById('tr-date')||{value:''}).value;
     if(!dv){var now=new Date();dv=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');}
@@ -6699,7 +6700,7 @@ document.addEventListener('click',function(e){
   if(opt&&document.getElementById('ast-city')&&e.target.closest('#asterSection')){
     document.getElementById('ast-city').value=opt.dataset.name+', '+opt.dataset.country;
     document.getElementById('ast-lat').value=opt.dataset.lat;
-    document.getElementById('ast-lon').value=opt.dataset.lon;
+    document.getElementById('ast-lon').value=opt.dataset.lon; try{if(window._l2Sync){_l2Sync('ast','city',opt.dataset.name+', '+opt.dataset.country);_l2Sync('ast','lat',opt.dataset.lat);_l2Sync('ast','lon',opt.dataset.lon);}}catch(e){}
     document.getElementById('ast-city-dd').style.display='none';
     var dv=(document.getElementById('ast-date')||{value:''}).value;
     if(!dv){var now=new Date();dv=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');}
@@ -7701,6 +7702,7 @@ document.addEventListener('click',function(e){
         ci.value=opt.dataset.name+', '+opt.dataset.country;
         document.getElementById('acg-lat').value=opt.dataset.lat;
         document.getElementById('acg-lon').value=opt.dataset.lon;
+        try{if(window._l2Sync){_l2Sync('acg','city',opt.dataset.name+', '+opt.dataset.country);_l2Sync('acg','lat',opt.dataset.lat);_l2Sync('acg','lon',opt.dataset.lon);}}catch(e){}
         document.getElementById('acg-city-dd').style.display='none';
         var dv=(document.getElementById('acg-date')||{value:''}).value;
         if(!dv){var now=new Date();dv=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');}
@@ -9723,6 +9725,39 @@ const BGM="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMA
 
   resize();
   draw();
+})();
+
+</script>
+<script>
+/* ════════ Birth-data sync across natal/transit/asteroid/ACG tabs ════════ */
+(function(){
+  var L2_PREFIXES=['nc','tr','ast','acg'];
+  var L2_FIELDS=['date','hour','min','name','utc','lat','lon','city'];
+  // nc city is nc-city-search (input); others use prefix-city
+  function cityId(p){ return p==='nc' ? 'nc-city-search' : p+'-city'; }
+  function l2Sync(srcPrefix, field, value){
+    L2_PREFIXES.forEach(function(p){
+      if(p===srcPrefix)return;
+      var id = (field==='city') ? cityId(p) : p+'-'+field;
+      var el=document.getElementById(id);
+      if(el && el.value!==value){ el.value=value; }
+    });
+  }
+  function wire(){
+    L2_PREFIXES.forEach(function(p){
+      L2_FIELDS.forEach(function(f){
+        var id = (f==='city') ? cityId(p) : p+'-'+f;
+        var el=document.getElementById(id);
+        if(!el)return;
+        var evt=(el.tagName==='SELECT')?'change':'input';
+        el.addEventListener(evt,function(){ l2Sync(p,f,el.value); });
+      });
+    });
+  }
+  // expose for programmatic city-pick handlers to call
+  window._l2Sync=l2Sync;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);
+  else wire();
 })();
 </script>
 </body>
