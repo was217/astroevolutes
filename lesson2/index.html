@@ -2290,7 +2290,7 @@ button,.btn{min-height:48px!important}
         <label>Дата транзита <span style="opacity:.5;font-size:10px;">(по умолчанию сегодня)</span></label>
         <input type="date" id="tr-transit-date">
       </div>
-      <div class="field"><label>Время транзита (UTC)</label>
+      <div class="field"><label>Время транзита (местное)</label>
         <div style="display:flex;gap:8px;">
           <select id="tr-tr-hour" style="flex:1;"></select>
           <select id="tr-tr-min" style="flex:1;"></select>
@@ -3660,7 +3660,7 @@ function calcNatal(){
   var name = document.getElementById('nc-name').value || 'Неизвестно';
   var dv   = document.getElementById('nc-date').value;
   if(!dv){ alert('Пожалуйста, введите дату рождения'); return; }
-  var h    = parseInt(document.getElementById('nc-hour').value) || 12;
+  var h    = (function(){var v=parseInt(document.getElementById('nc-hour').value);return isNaN(v)?12:v;})();
   var mi   = parseInt(document.getElementById('nc-min').value)  || 0;
   // Get coordinates: city name lookup is authoritative, hidden input is fallback
   var lat = 0, lonV = 0;
@@ -4831,7 +4831,7 @@ function selectCity(name,country,lat,lon){
 
 function updateUTCForCity(cityName) {
   var dv = document.getElementById('nc-date') ? document.getElementById('nc-date').value : '';
-  var h  = document.getElementById('nc-hour') ? parseInt(document.getElementById('nc-hour').value)||12 : 12;
+  var h  = document.getElementById('nc-hour') ? (function(){var v=parseInt(document.getElementById('nc-hour').value);return isNaN(v)?12:v;})() : 12;
   var mi = document.getElementById('nc-min')  ? parseInt(document.getElementById('nc-min').value)||0  : 0;
   var usel = document.getElementById('nc-utc');
   if(!usel) return;
@@ -5278,14 +5278,14 @@ function calcSynastry() {
   var dv2 = document.getElementById('syn-date2').value;
   if(!dv1||!dv2){alert('Пожалуйста, введите даты рождения обоих партнёров'); return;}
 
-  var h1=parseInt(document.getElementById('syn-hour1').value)||12;
+  var h1=(function(){var v=parseInt(document.getElementById('syn-hour1').value);return isNaN(v)?12:v;})();
   var mi1=parseInt(document.getElementById('syn-min1').value)||0;
-  var utc1=parseInt(document.getElementById('syn-utc1').value)||3;
+  var utc1=(function(){var v=parseInt(document.getElementById('syn-utc1').value);return isNaN(v)?3:v;})();
   var lat1=parseFloat(document.getElementById('syn-lat1').value)||55.75;
 
-  var h2=parseInt(document.getElementById('syn-hour2').value)||12;
+  var h2=(function(){var v=parseInt(document.getElementById('syn-hour2').value);return isNaN(v)?12:v;})();
   var mi2=parseInt(document.getElementById('syn-min2').value)||0;
-  var utc2=parseInt(document.getElementById('syn-utc2').value)||3;
+  var utc2=(function(){var v=parseInt(document.getElementById('syn-utc2').value);return isNaN(v)?3:v;})();
   var lat2=parseFloat(document.getElementById('syn-lat2').value)||55.75;
 
   var dp1=dv1.split('-'), y1=parseInt(dp1[0]),mo1=parseInt(dp1[1]),d1=parseInt(dp1[2]);
@@ -5747,7 +5747,7 @@ function calcTransits(){
   var nName=document.getElementById('tr-name').value||'Неизвестно';
   var dv=document.getElementById('tr-date').value;
   if(!dv){alert('Введите дату рождения');return;}
-  var h=parseInt(document.getElementById('tr-hour').value)||12;
+  var h=(function(){var v=parseInt(document.getElementById('tr-hour').value);return isNaN(v)?12:v;})();
   var mi=parseInt(document.getElementById('tr-min').value)||0;
   var utcOffset=parseInt(document.getElementById('tr-utc').value)||0;
   var dp=dv.split('-'),y=parseInt(dp[0]),mo=parseInt(dp[1]),d=parseInt(dp[2]);
@@ -5766,13 +5766,13 @@ function calcTransits(){
   // Rule 1: Date.UTC for natal
   var natalDate=new Date(Date.UTC(y,mo-1,d,h-utcOffset,mi,0));
 
-  // Transit date/time (already UTC)
+  // Transit date/time (local, converted via birth UTC offset)
   var tdv=document.getElementById('tr-transit-date').value;
   if(!tdv){var now=new Date();tdv=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');}
-  var trH=parseInt(document.getElementById('tr-tr-hour').value)||12;
+  var trH=(function(){var v=parseInt(document.getElementById('tr-tr-hour').value);return isNaN(v)?12:v;})();
   var trMi=parseInt(document.getElementById('tr-tr-min').value)||0;
   var tdp=tdv.split('-');
-  var transitDate=new Date(Date.UTC(parseInt(tdp[0]),parseInt(tdp[1])-1,parseInt(tdp[2]),trH,trMi,0));
+  var transitDate=new Date(Date.UTC(parseInt(tdp[0]),parseInt(tdp[1])-1,parseInt(tdp[2]),trH-utcOffset,trMi,0));
 
   // Calculate planets
   var natalPlanets=getPlanetData(natalDate,lat,lonV);
@@ -5852,7 +5852,7 @@ function generateTransitsPDF(){
   var dv=document.getElementById('tr-date').value||'';
   var tdv=document.getElementById('tr-transit-date').value||'';
   var city=(document.getElementById('tr-city')||{value:''}).value.split(',')[0].trim();
-  var trH=parseInt(document.getElementById('tr-tr-hour').value)||12;
+  var trH=(function(){var v=parseInt(document.getElementById('tr-tr-hour').value);return isNaN(v)?12:v;})();
   var trMi=parseInt(document.getElementById('tr-tr-min').value)||0;
   var MON=['\u044f\u043d\u0432','\u0444\u0435\u0432','\u043c\u0430\u0440','\u0430\u043f\u0440','\u043c\u0430\u044f','\u0438\u044e\u043d','\u0438\u044e\u043b','\u0430\u0432\u0433','\u0441\u0435\u043d','\u043e\u043a\u0442','\u043d\u043e\u044f','\u0434\u0435\u043a'];
   function fd(v){if(!v)return '';var p=v.split('-');return parseInt(p[2])+' '+MON[parseInt(p[1])-1]+' '+p[0]+' \u0433.';}
@@ -6563,7 +6563,7 @@ function calcAsteroids(){
 
   var dv=document.getElementById('ast-date').value;
   if(!dv){alert('\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0434\u0430\u0442\u0443 \u0440\u043e\u0436\u0434\u0435\u043d\u0438\u044f');return;}
-  var h=parseInt(document.getElementById('ast-hour').value)||12;
+  var h=(function(){var v=parseInt(document.getElementById('ast-hour').value);return isNaN(v)?12:v;})();
   var mi=parseInt(document.getElementById('ast-min').value)||0;
   var utcOffset=parseInt(document.getElementById('ast-utc').value)||0;
   var nName=document.getElementById('ast-name').value||'\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u043e';
@@ -7605,7 +7605,7 @@ function calcACG(){
 
   var dv=document.getElementById('acg-date').value;
   if(!dv){alert('\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0434\u0430\u0442\u0443 \u0440\u043e\u0436\u0434\u0435\u043d\u0438\u044f');return;}
-  var h=parseInt(document.getElementById('acg-hour').value)||12;
+  var h=(function(){var v=parseInt(document.getElementById('acg-hour').value);return isNaN(v)?12:v;})();
   var mi=parseInt(document.getElementById('acg-min').value)||0;
   var utcOffset=parseInt(document.getElementById('acg-utc').value)||0;
   var nName=document.getElementById('acg-name').value||'\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u043e';
